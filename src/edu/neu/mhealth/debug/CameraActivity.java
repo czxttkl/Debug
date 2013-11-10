@@ -27,8 +27,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2 {
 	/*Basic Variables*/
 	private final String TAG = Global.APP_LOG_TAG;
 	private final int ACCUMULATOR_THRESHOLD = 50;
-	private final int MINLINELENGTH = 100;
-	private final int MAXLINEGAP = 80;
+	private final int MIN_LINE_LENGTH = 100;
+	private final int MAX_LINE_GAP = 10;
 	private final int HYSTERESIS_THRESHOLD1 = 50;
 	private final int HYSTERESIS_THRESHOLD2 = 400;
 	private final int HOUGH_LINE_COUNT = 5;
@@ -113,9 +113,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2 {
 		mRgba = inputFrame.rgba();
 		mGray = inputFrame.gray();
 		Mat cannyMat = new Mat();
-		mGray.submat(1, mGray.rows()-1, 1, mGray.cols()-1).copyTo(cannyMat);
 		Imgproc.Canny(mGray, cannyMat, HYSTERESIS_THRESHOLD1, HYSTERESIS_THRESHOLD2, 3, false);
-		Imgproc.HoughLinesP(cannyMat, lines, 1, Math.PI/180, ACCUMULATOR_THRESHOLD, MINLINELENGTH, MAXLINEGAP);
+		Imgproc.HoughLinesP(cannyMat, lines, 1, Math.PI/180, ACCUMULATOR_THRESHOLD, MIN_LINE_LENGTH, MAX_LINE_GAP);
 		
 		for (int x = 0; x < lines.cols() && x < HOUGH_LINE_COUNT; x++) {
 	          double[] vec = lines.get(0, x);
