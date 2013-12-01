@@ -445,8 +445,8 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 	}
 
 	public volatile float globalRotateDegree = 0;
-	public float distanceX;
-	public float distanceY;
+//	public float distanceX;
+//	public float distanceY;
 
 	/** This variable will be incremented every frame. */
 	public int fireDrawCount = 1;
@@ -880,9 +880,8 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 				} else {
 					// If the bug is still in the screen AND it is not burning
 					if (!bug.burning) {
-						int distFromBugToFire = calculateDistFromBugToFire(tmpX, tmpY);
-						if (distFromBugToFire < OpenGLBug.radius * 2) {
-							Log.d(TAG, "czx openglbug radius:" + OpenGLBug.radius + " dist:" + distFromBugToFire);
+						if (ifFireHitsBug(tmpX, tmpY)) {
+//							Log.d(TAG, "czx openglbug radius:" + OpenGLBug.radius + " dist:" + distFromBugToFire);
 							bug.burning = true;
 							bug.shouldPause = true;
 							updateScore(bug.type);
@@ -1050,8 +1049,17 @@ public class OpenGlRenderer implements GLSurfaceView.Renderer {
 		return randomNum;
 	}
 	
-	/** Determine whether the bug is burned */
-	private int calculateDistFromBugToFire(int tmpX, int tmpY) {
-		return 1000;
+	/** Determine whether the bug is burned by return the max distance between the bug and two fire flames */
+	private boolean ifFireHitsBug(int tmpX, int tmpY) {
+		for (OpenGLFire mOpenGLFire : mFireList) {
+			long xDiff = tmpX - (int)(mOpenGLFire.ratioX * screenOpenGLWidth);
+			long yDiff = tmpY - (int)(mOpenGLFire.ratioY * screenOpenGLHeight);
+			double distance = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+			if (distance < 4 * OpenGLBug.radius) {
+				Log.d(TAG, "czx hits:" + distance);
+				return true;
+			}
+		}
+		return false;
 	}
 }

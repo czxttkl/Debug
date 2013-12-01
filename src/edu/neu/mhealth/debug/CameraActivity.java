@@ -31,6 +31,7 @@ import edu.neu.mhealth.debug.opengl.OpenGLFire;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera.Size;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -71,10 +72,10 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 	 * The game activity's framelayout. Use this to handle
 	 * adding/removingsurfaceviews
 	 */
-	
+
 	/** Record how many bugs the user has killed */
 	public int score = 0;
-	
+
 	FrameLayout mFrameLayout;
 
 	/**
@@ -146,16 +147,9 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 	public MyGLSurfaceView mGLSurfaceView;
 
 	/* Sensor Variables */
-	private final float MAX_ROATE_DEGREE = 1.0f;
 	private SensorManager mSensorManager;
-	private Sensor mOrientationSensor;
-	private Sensor mLinearAccelerometer;
 	private Sensor mAccelerometer;
-	private float mDirection;
-	private float mTargetDirection;
-	private AccelerateInterpolator mInterpolator;
 	protected final Handler mHandler = new Handler();
-	private boolean mStopDetecting;
 
 	// private final long PACE_TWO_OPPOSITE_PEAK_INTERVAL = 2000;
 
@@ -210,7 +204,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		mFrameLayout.removeView(mMainMenuTitle);
 		mFrameLayout.removeView(mMainMenuButtonListView);
 		mFrameLayout.removeView(mMainMenuBackground);
-		
+
 		// OpenGL shouldn't render anything right after clicking start game.
 		mGLSurfaceView.mRenderer.openGlMode = mGLSurfaceView.mRenderer.MODE_DEFAULT;
 
@@ -443,8 +437,8 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		screenOpenCvWidth = width;
 		screenOpenCvHeight = height;
 		// We assume screenPixel dimensions are the same with opengl coordinate
-		openCVGLRatioX = (double)screenOpenCvWidth / screenPixelWidth;
-		openCVGLRatioY = (double)screenOpenCvHeight / screenPixelHeight;
+		openCVGLRatioX = (double) screenOpenCvWidth / screenPixelWidth;
+		openCVGLRatioY = (double) screenOpenCvHeight / screenPixelHeight;
 
 		mGray = new Mat();
 		mRgba = new Mat();
@@ -474,6 +468,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		mGray = inputFrame.gray();
 		mRgba = inputFrame.rgba();
+		// Log.d(TAG, "resolution real:" + mRgba.cols() + ":" + mRgba.rows());
 		switch (openCvMode) {
 
 		case MODE_COLOR_PICK_CROSSHAIR:
@@ -588,10 +583,15 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		return resultArray;
 	}
 
-	/** Return if the point is in the floor's contour 
-	 * +1: outside the contour -1: inside the contour 0:lies on the edge;
-	 * @param openCvWidth The width in the opencv screen
-	 * @param openCvHeight The height in the opencv screen*/
+	/**
+	 * Return if the point is in the floor's contour +1: outside the contour -1:
+	 * inside the contour 0:lies on the edge;
+	 * 
+	 * @param openCvWidth
+	 *            The width in the opencv screen
+	 * @param openCvHeight
+	 *            The height in the opencv screen
+	 */
 	public int ifPointIsInFloor(int openCvWidth, int openCvHeight) {
 		org.opencv.core.Point pt = new org.opencv.core.Point(openCvWidth, openCvHeight);
 		MatOfPoint2f detectedFloorContour2f = new MatOfPoint2f();
@@ -599,6 +599,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		int result = (int) Imgproc.pointPolygonTest(detectedFloorContour2f, pt, false);
 		return result;
 	}
+
 	/**
 	 * This method is called in opencv so that we could know the location of
 	 * shoes
@@ -661,6 +662,7 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 	private void restoreOrCreateJavaCameraView() {
 		mOpenCvCameraView = new CameraView(this);
 		mOpenCvCameraView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		mOpenCvCameraView.setMaxFrameSize(800, 800);
 		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 		mOpenCvCameraView.setCvCameraViewListener(this);
 		mOpenCvCameraView.enableFpsMeter();
@@ -693,8 +695,6 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		lp1.setMargins(0, 300, 0, 0);
 		mMainMenuButtonListView.setLayoutParams(lp1);
 		mFrameLayout.addView(mMainMenuButtonListView);
-
-		mHandler.postDelayed(mMainMenuBorderRunnable, 20);
 	}
 
 	/**
@@ -720,34 +720,19 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 	 * Sensor methods
 	 */
 	private void initSensors() {
-		mDirection = 0.0f;
-		mTargetDirection = 0.0f;
-		mInterpolator = new AccelerateInterpolator();
-		mStopDetecting = true;
 		// sensor manager
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		mOrientationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-		mLinearAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 	}
 
 	private void resumeSensors() {
-		mStopDetecting = false;
-		if (mOrientationSensor != null) {
-			mSensorManager.registerListener(this, mOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
-		}
-		if (mLinearAccelerometer != null) {
-			mSensorManager.registerListener(this, mLinearAccelerometer, SensorManager.SENSOR_DELAY_GAME);
-		}
 		if (mAccelerometer != null) {
 			mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
 		}
-		mHandler.postDelayed(mEyeLocationUpdaterRunnable, 20);
 	}
 
 	private void pauseSensors() {
-		mStopDetecting = true;
-		if (mOrientationSensor != null || mLinearAccelerometer != null || mAccelerometer != null) {
+		if (mAccelerometer != null) {
 			mSensorManager.unregisterListener(this);
 		}
 	}
@@ -760,164 +745,37 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 
 	@Override
 	public void onSensorChanged(SensorEvent arg0) {
-		if (Sensor.TYPE_ORIENTATION == arg0.sensor.getType()) {
-			float direction = arg0.values[0] * -1.0f;
-			mTargetDirection = normalizeDegree(direction);
-		} else {
-			if (Sensor.TYPE_LINEAR_ACCELERATION == arg0.sensor.getType()) {
-				// mGLSurfaceView.mRenderer.eyeY = mGLSurfaceView.mRenderer.eyeY
-				// + speedX;
-				// mGLSurfaceView.mRenderer.eyeX = mGLSurfaceView.mRenderer.eyeX
-				// - speedY * SPEED_CONSTANT;
-			} else {
-				if (Sensor.TYPE_ACCELEROMETER == arg0.sensor.getType()) {
-					// Log.d(TAG, "accelerometer z:" + arg0.values[2]);
-					switch (openCvMode) {
-					case MODE_COLOR_PICK_CROSSHAIR:
-						if (arg0.values[2] < 8.5f) {
-							mColorPickHelpNotifTextView.setVisibility(View.GONE);
-							mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_horizon);
-							mColorPickHelpNotifTextView.setTextColor(Color.RED);
-							mColorPickHelpNotifTextView.setVisibility(View.VISIBLE);
-							openCvMode = MODE_COLOR_PICK_HOLD_WRONGLY;
-							mColorPickCameraButton.setEnabled(false);
-						}
-						break;
-					case MODE_COLOR_PICK_HOLD_WRONGLY:
-						if (arg0.values[2] > 8.5f) {
-							mColorPickHelpNotifTextView.setVisibility(View.GONE);
-							if (!shoeColorPicked) {
-								mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_shoe);
-							} else {
-								mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_floor);
-							}
-							mColorPickHelpNotifTextView.setTextColor(Color.WHITE);
-							mColorPickHelpNotifTextView.setVisibility(View.VISIBLE);
-							openCvMode = MODE_COLOR_PICK_CROSSHAIR;
-							mColorPickCameraButton.setEnabled(true);
-						}
-					default:
-						// Do nothing
-					}
+		if (Sensor.TYPE_ACCELEROMETER == arg0.sensor.getType()) {
+			// Log.d(TAG, "accelerometer z:" + arg0.values[2]);
+			switch (openCvMode) {
+			case MODE_COLOR_PICK_CROSSHAIR:
+				if (arg0.values[2] < 8.5f) {
+					mColorPickHelpNotifTextView.setVisibility(View.GONE);
+					mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_horizon);
+					mColorPickHelpNotifTextView.setTextColor(Color.RED);
+					mColorPickHelpNotifTextView.setVisibility(View.VISIBLE);
+					openCvMode = MODE_COLOR_PICK_HOLD_WRONGLY;
+					mColorPickCameraButton.setEnabled(false);
 				}
-			}
-		}
-	}
-
-	protected Runnable mEyeLocationUpdaterRunnable = new Runnable() {
-		@Override
-		public void run() {
-			if (!mStopDetecting) {
-				if (mDirection != mTargetDirection) {
-					// calculate the short routine
-					float to = mTargetDirection;
-					if (to - mDirection > 180) {
-						to -= 360;
-					} else if (to - mDirection < -180) {
-						to += 360;
+				break;
+			case MODE_COLOR_PICK_HOLD_WRONGLY:
+				if (arg0.values[2] > 8.5f) {
+					mColorPickHelpNotifTextView.setVisibility(View.GONE);
+					if (!shoeColorPicked) {
+						mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_shoe);
+					} else {
+						mColorPickHelpNotifTextView.setText(R.string.color_pick_help_notif_floor);
 					}
-
-					// limit the max speed to MAX_ROTATE_DEGREE
-					float distance = to - mDirection;
-					if (Math.abs(distance) > MAX_ROATE_DEGREE) {
-						distance = distance > 0 ? MAX_ROATE_DEGREE : (-1.0f * MAX_ROATE_DEGREE);
-					}
-
-					// need to slow down if the distance is short
-					float mDirectionNew = normalizeDegree(mDirection + ((to - mDirection) * mInterpolator.getInterpolation(Math.abs(distance) > MAX_ROATE_DEGREE ? 0.4f : 0.3f)));
-					mDirection = mDirectionNew;
-					updateOpenGLEyeLocation(mDirection);
+					mColorPickHelpNotifTextView.setTextColor(Color.WHITE);
+					mColorPickHelpNotifTextView.setVisibility(View.VISIBLE);
+					openCvMode = MODE_COLOR_PICK_CROSSHAIR;
+					mColorPickCameraButton.setEnabled(true);
 				}
-				mHandler.postDelayed(mEyeLocationUpdaterRunnable, 20);
+			default:
+				// Do nothing
 			}
 		}
-	};
 
-	/**
-	 * This runnable will be run until Main Menu Title is rendered.
-	 */
-	protected Runnable mMainMenuBorderRunnable = new Runnable() {
-		@Override
-		public void run() {
-			// This means the views haven't been rendered
-			View buttonLinearLayout = findViewById(R.id.buttons_linear_layout);
-			if (buttonLinearLayout == null || mMainMenuTitle == null) {
-				mHandler.postDelayed(mMainMenuBorderRunnable, 200);
-				return;
-			}
-			int mainMenuTitleWidth = mMainMenuTitle.getWidth();
-			int mainMenuTitleHeight = mMainMenuTitle.getHeight();
-			int buttonLinearLayoutWidth = buttonLinearLayout.getWidth();
-			int buttonLinearLayoutHeight = buttonLinearLayout.getHeight();
-			//
-			int[] mainMenuTitleLocation = new int[2];
-			mMainMenuTitle.getLocationInWindow(mainMenuTitleLocation);
-			int[] mainMenuButtonLocation = new int[2];
-			buttonLinearLayout.getLocationInWindow(mainMenuButtonLocation);
-			// This means the views haven't been rendered
-			if ((mainMenuTitleLocation[0] == 0 && mainMenuTitleLocation[1] == 0) || (mainMenuButtonLocation[0] == 0 && mainMenuButtonLocation[1] == 0) || mGLSurfaceView.mRenderer == null) {
-				mHandler.postDelayed(mMainMenuBorderRunnable, 200);
-				return;
-			}
-			// Convert to y-axis upwards coordinate
-			mainMenuTitleLocation[1] = screenPixelHeight - mainMenuTitleLocation[1];
-			mainMenuButtonLocation[1] = screenPixelHeight - mainMenuButtonLocation[1];
-			Log.d(TAG, "main menu title location:" + mainMenuTitleLocation[0] + "," + mainMenuTitleLocation[1] + ":" + mainMenuTitleWidth + "," + mainMenuTitleHeight);
-			Log.d(TAG, "main menu button location:" + mainMenuButtonLocation[0] + "," + mainMenuButtonLocation[1] + ":" + buttonLinearLayoutWidth + "," + buttonLinearLayoutHeight);
-			// Add the title and buttons constraints
-			BorderLine bl1 = new BorderLine(BorderLine.TYPE_UPPER_BOUND, 0, mainMenuTitleLocation[1], 1);
-			BorderLine bl2 = new BorderLine(BorderLine.TYPE_UPPER_BOUND, 0, mainMenuButtonLocation[1], 1);
-			BorderLine bl3 = new BorderLine(BorderLine.TYPE_LOWER_BOUND, 0, mainMenuTitleLocation[1] - mainMenuTitleHeight, 1);
-			BorderLine bl4 = new BorderLine(BorderLine.TYPE_LOWER_BOUND, 0, mainMenuButtonLocation[1] - buttonLinearLayoutHeight, 1);
-			BorderLine bl5 = new BorderLine(BorderLine.TYPE_X_LEFT_BOUND, 1, mainMenuTitleLocation[0], 0);
-			BorderLine bl6 = new BorderLine(BorderLine.TYPE_X_LEFT_BOUND, 1, mainMenuButtonLocation[0], 0);
-			BorderLine bl7 = new BorderLine(BorderLine.TYPE_X_RIGHT_BOUND, 1, mainMenuTitleLocation[0] + mainMenuTitleWidth, 0);
-			BorderLine bl8 = new BorderLine(BorderLine.TYPE_X_RIGHT_BOUND, 1, mainMenuButtonLocation[0] + buttonLinearLayoutWidth, 0);
-			// Add the screen constraints
-			BorderLine bl9 = new BorderLine(BorderLine.TYPE_UPPER_BOUND, 0, screenPixelHeight, 1);
-			BorderLine bl10 = new BorderLine(BorderLine.TYPE_LOWER_BOUND, 0, 0, 1);
-			BorderLine bl11 = new BorderLine(BorderLine.TYPE_X_LEFT_BOUND, 1, 0, 0);
-			BorderLine bl12 = new BorderLine(BorderLine.TYPE_X_RIGHT_BOUND, 1, screenPixelWidth, 0);
-
-			ArrayList<BorderLine> mBorderLineList = new ArrayList<BorderLine>();
-			mBorderLineList.add(bl1);
-			mBorderLineList.add(bl2);
-			mBorderLineList.add(bl3);
-			mBorderLineList.add(bl4);
-			mBorderLineList.add(bl5);
-			mBorderLineList.add(bl6);
-			mBorderLineList.add(bl7);
-			mBorderLineList.add(bl8);
-			mBorderLineList.add(bl9);
-			mBorderLineList.add(bl10);
-			mBorderLineList.add(bl11);
-			mBorderLineList.add(bl12);
-			mGLSurfaceView.mRenderer.borderLineList = mBorderLineList;
-		}
-	};
-
-	private float normalizeDegree(float degree) {
-		return (degree + 720) % 360;
-	}
-
-	/** Calculate the average value of a float array */
-	private float average(float[] array) {
-		float sum = 0;
-		for (float i : array) {
-			sum = sum + i;
-		}
-		return sum / array.length;
-	}
-
-	private void updateOpenGLEyeLocation(float mDirectionNew) {
-		long now = System.currentTimeMillis();
-		// if (speedY == 0 && speedX == 0) {
-		//
-		// mGLSurfaceView.mRenderer.globalRotateDegree = mDirectionNew;
-		// }
-		// Log.d(TAG, "speedY:" + speedY + " eyeX:" +
-		// mGLSurfaceView.mRenderer.eyeX);
-		// mGLSurfaceView.mRenderer.eyeX;
 	}
 
 	/** Initialize blackbackground drawable resource */
@@ -934,17 +792,16 @@ public class CameraActivity extends Activity implements CvCameraViewListener2, S
 		screenPixelWidth = size.x;
 		screenPixelHeight = size.y;
 	}
-	
+
 	/** Update the score and also call updateScoreUI to update the UI */
 	public void updateScore(int diff) {
 		score = score + diff;
 		updateScoreUI();
 	}
-	
+
 	/** Update the score UI */
 	private void updateScoreUI() {
-		
+
 	}
-	
 
 }

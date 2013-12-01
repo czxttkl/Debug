@@ -33,6 +33,7 @@ import edu.neu.mhealth.debug.helper.MovingAverage;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Camera;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEventListener;
@@ -54,7 +55,9 @@ import android.widget.RelativeLayout;
 public class MainActivity extends Activity implements OnTouchListener,
 		CvCameraViewListener2 {
 	private static final String TAG = "OCVSample::Activity";
-
+	
+	/// OpenCV basic
+	private List<android.hardware.Camera.Size> resolutions;
 	/// For color detection
 	private boolean mIsColorSelected = false;
 	private Mat mRgba;
@@ -81,8 +84,8 @@ public class MainActivity extends Activity implements OnTouchListener,
 	private int screenWidth;
 	private int screenHeight;
 
-	private int cameraWidth;
-	private int cameraHeight;
+	private int imageWidth;
+	private int imageHeight;
 	
 	private Scalar colorGreen;
 	private Scalar colorRed;
@@ -126,7 +129,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 	private Sensor sensorACC;
 	private AccEventListener accEventListener;
 	
-	// for direction / motion detection
+	/// For direction / motion detection
 	private MotionEventListener motionEventListener;
 	
 
@@ -174,10 +177,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 		mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
 		mOpenCvCameraView.setCvCameraViewListener(this);
 		mOpenCvCameraView.enableFpsMeter();
-
-		cameraWidth = mOpenCvCameraView.getWidth();
-		cameraHeight = mOpenCvCameraView.getHeight();
-
+		
 		configureView = new ConfigureView(this, screenWidth, screenHeight);
 
 		bug1 = new Bug(this, 20, 30);
@@ -197,7 +197,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 		filterY = new MovingAverage(5);
 
 		Log.e(TAG, "screen size: " + screenHeight + " " + screenWidth);
-		Log.e(TAG, "camera size: " + cameraHeight + " " + cameraWidth);
+		Log.e(TAG, "camera size: " + mOpenCvCameraView.getHeight() + " " + mOpenCvCameraView.getWidth());
 		
 		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -258,6 +258,13 @@ public class MainActivity extends Activity implements OnTouchListener,
 		colorGreen = new Scalar(0, 255, 0);
 		colorBlue = new Scalar(0, 0, 255);
 		colorWhite = new Scalar(255, 255, 255);
+		
+		resolutions = mOpenCvCameraView.getResolutionList();
+//		for (android.hardware.Camera.Size resolution : resolutions) {
+//			Log.i(TAG, "supported size: " + resolution.width + "  " + resolution.height);
+//		}
+		mOpenCvCameraView.setResolution(resolutions.get(5));
+		
 	}
 
 	public void onCameraViewStopped() {
@@ -267,37 +274,32 @@ public class MainActivity extends Activity implements OnTouchListener,
 
 	public boolean onTouch(View v, MotionEvent event) {
 
-		// int x = (int)event.getX() - xOffset;
-		// int y = (int)event.getY() - yOffset;
-
 		Log.e(TAG, "touch coordinate: " + event.getX() + "  " + event.getY());
 
 		int x = configureView.getFloorPosition().x;
 		int y = configureView.getFloorPosition().y;
 
-		// Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
-
 		mIsColorSelected = true;
 
-		return false; // don't need subsequent touch events
+		return false; 
 	}
 
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 		mRgba = inputFrame.rgba();
 		mGray = inputFrame.gray();
+	
+		imageWidth = mRgba.cols();
+		imageHeight = mRgba.rows();
 
-		int cols = mRgba.cols();
-		int rows = mRgba.rows();
-
-		xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-		yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
-
-		// Log.e(TAG, "bug position: " + bug1.getPosition().x + "   " +
-		// bug1.getPosition().y);
+		xOffset = (mOpenCvCameraView.getWidth() - imageWidth) / 2;
+		yOffset = (mOpenCvCameraView.getHeight() - imageHeight) / 2;
 
 		bug1.setLimit(mOpenCvCameraView.getWidth(),
 				mOpenCvCameraView.getHeight());
 		bug1.setOffset(xOffset, yOffset);
+		
+//		Log.i(TAG, "viewport size: " + mOpenCvCameraView.getWidth() + " " + mOpenCvCameraView.getHeight());
+//		Log.i(TAG, "Image size : " + mRgba.rows() + " "  + mRgba.cols());
 
 		this.runOnUiThread(new Runnable() {
 
@@ -311,20 +313,17 @@ public class MainActivity extends Activity implements OnTouchListener,
 		sensorManager.registerListener(accEventListener, sensorACC, SensorManager.SENSOR_DELAY_FASTEST);	
 
 		if (mIsColorSelected) {
-			
-
+	
 			int x = configureView.getFloorPosition().x - xOffset;
 			int y = configureView.getFloorPosition().y - yOffset;
 			Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
 			contourFloor = findObjectAt(x, y);
-
 			Imgproc.drawContours(mRgba, contourFloor, -1, CONTOUR_COLOR);
 
 			x = configureView.getShoesPosition().x - xOffset;
 			y = configureView.getShoesPosition().y - yOffset;
 
 			contourShoe = findObjectAt(x, y);
-
 			Imgproc.drawContours(mRgba, contourShoe, -1, CONTOUR_COLOR);
 
 			configureView.disableDrawing();
@@ -344,15 +343,13 @@ public class MainActivity extends Activity implements OnTouchListener,
 
 			bugShoeCollisionCheck();
 		}
-		 
 
 		Rect optFlowRect = new Rect();
-		optFlowRect.x = screenWidth / 2 - squareMetric / 2;
-		optFlowRect.y = screenHeight - rectHeight - squareMetric;
+		optFlowRect.x = imageWidth / 2 - squareMetric / 2;
+		optFlowRect.y = imageHeight / 2 - squareMetric / 2;
 		optFlowRect.width = squareMetric;
 		optFlowRect.height = squareMetric;
 
-//		Log.e(TAG, "optical location:" + optFlowRect.x + " " + optFlowRect.y);
 		optFlowMatRgba = mRgba.submat(optFlowRect);
 
 		if (mMOP2PtsPrev.rows() == 0) {
@@ -423,9 +420,9 @@ public class MainActivity extends Activity implements OnTouchListener,
 			int dis_X = filterX.getValue();
 			int dis_Y = filterY.getValue();
 			
-			motionEventListener.notifyMotion(dis_X, dis_Y);
+//			motionEventListener.notifyMotion(dis_X, dis_Y);
 
-//			Log.e(TAG, "distance offset: "+ dis_X + " " + dis_Y);
+			Log.e(TAG, "distance motion: "+ dis_X + " " + dis_Y);
 			
 			if (dis_X >= motionThX && dis_Y >= motionThY) {
 //				Log.e(TAG, "direction assigned: forward left");
@@ -443,7 +440,6 @@ public class MainActivity extends Activity implements OnTouchListener,
 			}
 		}
 		
-
 		return mRgba;
 	}
 
