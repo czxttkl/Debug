@@ -24,10 +24,19 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.video.Video;
 
+import edu.neu.mhealth.debug.helper.AccEventListener;
+import edu.neu.mhealth.debug.helper.Bug;
+import edu.neu.mhealth.debug.helper.BugManager;
+import edu.neu.mhealth.debug.helper.JumpBug;
+import edu.neu.mhealth.debug.helper.MotionEventListener;
 import edu.neu.mhealth.debug.helper.MovingAverage;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -46,6 +55,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 		CvCameraViewListener2 {
 	private static final String TAG = "OCVSample::Activity";
 
+	/// For color detection
 	private boolean mIsColorSelected = false;
 	private Mat mRgba;
 	private Mat mGray;
@@ -61,6 +71,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 	private ConfigureView configureView;
 	private BugManager bugManager;
 	private Bug bug1;
+	private JumpBug jumpBug;
 	private int initalX = 0;
 	private int initalY = 0;
 	private int steps = 0;
@@ -72,11 +83,17 @@ public class MainActivity extends Activity implements OnTouchListener,
 
 	private int cameraWidth;
 	private int cameraHeight;
+	
+	private Scalar colorGreen;
+	private Scalar colorRed;
+	private Scalar colorBlue;
+	private Scalar colorWhite;
+
+	/// For optical flow
 
 	private List<MatOfPoint> contourFloor;
 	private List<MatOfPoint> contourShoe;
-	private MatOfPoint cornersMOP;
-	private List<Point> corners;
+
 
 	private Mat mOpFlowCurr;
 	private Mat mOpFlowPrev;
@@ -92,10 +109,7 @@ public class MainActivity extends Activity implements OnTouchListener,
 	private List<Byte> byteStatus;
 	private MovingAverage filterX;
 	private MovingAverage filterY;
-	private Scalar colorGreen;
-	private Scalar colorRed;
-	private Scalar colorBlue;
-	private Scalar colorWhite;
+
 
 	Mat optFlowMatRgba;
 	Mat optFlowMatGray;
@@ -106,6 +120,15 @@ public class MainActivity extends Activity implements OnTouchListener,
 	
 	private static final int motionThX = 100;
 	private static final int motionThY = 100;
+	
+	/// For jumping detection
+	private SensorManager sensorManager;
+	private Sensor sensorACC;
+	private AccEventListener accEventListener;
+	
+	// for direction / motion detection
+	private MotionEventListener motionEventListener;
+	
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
@@ -175,6 +198,8 @@ public class MainActivity extends Activity implements OnTouchListener,
 
 		Log.e(TAG, "screen size: " + screenHeight + " " + screenWidth);
 		Log.e(TAG, "camera size: " + cameraHeight + " " + cameraWidth);
+		
+		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
 	}
 
@@ -183,11 +208,21 @@ public class MainActivity extends Activity implements OnTouchListener,
 		super.onPause();
 		if (mOpenCvCameraView != null)
 			mOpenCvCameraView.disableView();
+		sensorManager.unregisterListener(accEventListener);
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
+		
+		sensorACC = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+		accEventListener = new AccEventListener(this.getApplicationContext());
+		jumpBug = new JumpBug(getApplicationContext());
+		accEventListener.addObserver(jumpBug);
+		
+		motionEventListener = new MotionEventListener();
+		motionEventListener.addObserver(jumpBug);
+		
 		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this,
 				mLoaderCallback);
 	}
@@ -272,39 +307,44 @@ public class MainActivity extends Activity implements OnTouchListener,
 				configureView.invalidate();
 			}
 		});
+		
+		sensorManager.registerListener(accEventListener, sensorACC, SensorManager.SENSOR_DELAY_FASTEST);	
 
-		/*
-		 * if (mIsColorSelected) {
-		 * 
-		 * int x = configureView.getFloorPosition().x - xOffset; int y =
-		 * configureView.getFloorPosition().y - yOffset; Log.i(TAG,
-		 * "Touch image coordinates: (" + x + ", " + y + ")"); contourFloor =
-		 * findObjectAt(x, y);
-		 * 
-		 * Log.e(TAG, "contourFloor count: " + contourFloor.size());
-		 * Imgproc.drawContours(mRgba, contourFloor, -1, CONTOUR_COLOR);
-		 * 
-		 * x = configureView.getShoesPosition().x - xOffset; y =
-		 * configureView.getShoesPosition().y - yOffset;
-		 * 
-		 * // Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
-		 * 
-		 * contourShoe = findObjectAt(x, y);
-		 * 
-		 * Log.e(TAG, "contourShoe count: " + contourShoe.size());
-		 * Imgproc.drawContours(mRgba, contourShoe, -1, CONTOUR_COLOR);
-		 * 
-		 * configureView.disableDrawing();
-		 * 
-		 * steps++; if (steps > 10) { this.runOnUiThread(new Runnable() {
-		 * 
-		 * @Override public void run() { bugManager.moveBugs(); } });
-		 * 
-		 * steps = 0; }
-		 * 
-		 * 
-		 * bugShoeCollisionCheck(); }
-		 */
+		if (mIsColorSelected) {
+			
+
+			int x = configureView.getFloorPosition().x - xOffset;
+			int y = configureView.getFloorPosition().y - yOffset;
+			Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+			contourFloor = findObjectAt(x, y);
+
+			Imgproc.drawContours(mRgba, contourFloor, -1, CONTOUR_COLOR);
+
+			x = configureView.getShoesPosition().x - xOffset;
+			y = configureView.getShoesPosition().y - yOffset;
+
+			contourShoe = findObjectAt(x, y);
+
+			Imgproc.drawContours(mRgba, contourShoe, -1, CONTOUR_COLOR);
+
+			configureView.disableDrawing();
+
+			steps++;
+			if (steps > 10) {
+				this.runOnUiThread(new Runnable() {
+
+					@Override
+					public void run() {
+						bugManager.moveBugs();
+					}
+				});
+
+				steps = 0;
+			}
+
+			bugShoeCollisionCheck();
+		}
+		 
 
 		Rect optFlowRect = new Rect();
 		optFlowRect.x = screenWidth / 2 - squareMetric / 2;
@@ -312,26 +352,10 @@ public class MainActivity extends Activity implements OnTouchListener,
 		optFlowRect.width = squareMetric;
 		optFlowRect.height = squareMetric;
 
-		Log.e(TAG, "optical location:" + optFlowRect.x + " " + optFlowRect.y);
+//		Log.e(TAG, "optical location:" + optFlowRect.x + " " + optFlowRect.y);
 		optFlowMatRgba = mRgba.submat(optFlowRect);
-		// Imgproc.cvtColor(optFlowMatRgba, optFlowMatGray,
-		// Imgproc.COLOR_RGBA2GRAY);
-		// cornersMOP = new MatOfPoint();
-		// Imgproc.goodFeaturesToTrack(optFlowMatGray, cornersMOP, 50, 0.01,
-		// 30.0);
-		// int y_corners = cornersMOP.rows();
-		// corners = cornersMOP.toList();
-		//
-		// for (int i = 0; i < y_corners; i++) {
-		// Point cornerPt = corners.get(i);
-		// cornerPt.x += optFlowRect.x;
-		// cornerPt.y += optFlowRect.y;
-		//
-		// Core.circle(mRgba, cornerPt, 8, new Scalar(255, 0, 0));
-		// }
 
 		if (mMOP2PtsPrev.rows() == 0) {
-			Log.e(TAG, "optical unavia");
 			Imgproc.cvtColor(optFlowMatRgba, mOpFlowCurr,
 					Imgproc.COLOR_RGBA2GRAY);
 			mOpFlowCurr.copyTo(mOpFlowPrev);
@@ -341,7 +365,6 @@ public class MainActivity extends Activity implements OnTouchListener,
 			mMOP2PtsPrev.fromArray(mMOPopFlowPrev.toArray());
 			mMOP2PtsPrev.copyTo(mMOP2PtsSafe);
 		} else {
-			Log.e(TAG, "start optical flow");
 
 			mOpFlowCurr.copyTo(mOpFlowPrev);
 			Imgproc.cvtColor(optFlowMatRgba, mOpFlowCurr,
@@ -399,25 +422,27 @@ public class MainActivity extends Activity implements OnTouchListener,
 			
 			int dis_X = filterX.getValue();
 			int dis_Y = filterY.getValue();
+			
+			motionEventListener.notifyMotion(dis_X, dis_Y);
 
-
-			Log.e(TAG, "distance offset: "+ dis_X + " " + dis_Y);
+//			Log.e(TAG, "distance offset: "+ dis_X + " " + dis_Y);
 			
 			if (dis_X >= motionThX && dis_Y >= motionThY) {
-				Log.e(TAG, "direction assigned: forward left");
+//				Log.e(TAG, "direction assigned: forward left");
 			}
 
 			if (dis_X <= (-1*motionThX) && dis_Y <= (-1*motionThY)) {
-				Log.e(TAG, "direction assigned: backward right");
+//				Log.e(TAG, "direction assigned: backward right");
 			}
 
 			if (dis_X >= motionThX & dis_Y <= (-1*motionThY)) {
-				Log.e(TAG, "direction assigned: backward left");
+//				Log.e(TAG, "direction assigned: backward left");
 			}
 			if (dis_X <= (-1*motionThX) & dis_Y >= motionThY) {
-				Log.e(TAG, "direction assigned: forward right");
+//				Log.e(TAG, "direction assigned: forward right");
 			}
 		}
+		
 
 		return mRgba;
 	}
@@ -469,9 +494,9 @@ public class MainActivity extends Activity implements OnTouchListener,
 
 		mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
 
-		Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", "
-				+ mBlobColorRgba.val[1] + ", " + mBlobColorRgba.val[2] + ", "
-				+ mBlobColorRgba.val[3] + ")");
+//		Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", "
+//				+ mBlobColorRgba.val[1] + ", " + mBlobColorRgba.val[2] + ", "
+//				+ mBlobColorRgba.val[3] + ")");
 
 		mDetector = new ColorDetector(800, 640);
 		mDetector.setShoeHsvColor(mBlobColorHsv);
