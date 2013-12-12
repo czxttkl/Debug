@@ -8,7 +8,6 @@ import java.util.Observer;
 
 import android.R.integer;
 import android.util.Log;
-import edu.neu.mhealth.debug.CameraActivity;
 import edu.neu.mhealth.debug.MainActivity;
 import edu.neu.mhealth.debug.helper.Global;
 import edu.neu.mhealth.debug.helper.ModeManager;
