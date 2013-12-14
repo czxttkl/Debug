@@ -652,7 +652,9 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 	public int isPointInFloor(int openCvWidth, int openCvHeight, boolean calculateDist) {
 		org.opencv.core.Point pt = new org.opencv.core.Point(openCvWidth, openCvHeight);
 		MatOfPoint2f detectedFloorContour2f = new MatOfPoint2f();
-		detectedFloorContours.get(0).convertTo(detectedFloorContour2f, CvType.CV_32FC2);
+		if ((detectedFloorContours!= null) && (detectedFloorContours.size() > 0)) {
+			detectedFloorContours.get(0).convertTo(detectedFloorContour2f, CvType.CV_32FC2);
+		}
 		int result = (int) Imgproc.pointPolygonTest(detectedFloorContour2f, pt, calculateDist);
 		return result;
 	}
