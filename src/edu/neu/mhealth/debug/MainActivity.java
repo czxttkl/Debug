@@ -308,7 +308,9 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 		mHandler.removeCallbacks(mStartRealGame);
 		mHandler.removeCallbacks(mTutorial1InstructionUpdator);
 		mHandler.removeCallbacks(mTutorial2InstructionUpdator);
-//		mHandler = null;
+		
+		shoeColorPicked = false;
+		floorColorPicked = false;
 	}
 
 	public void onCameraViewStarted(int width, int height) {
