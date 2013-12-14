@@ -663,9 +663,15 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 		MatOfPoint2f detectedFloorContour2f = new MatOfPoint2f();
 		if ((detectedFloorContours!= null) && (detectedFloorContours.size() > 0)) {
 			detectedFloorContours.get(0).convertTo(detectedFloorContour2f, CvType.CV_32FC2);
+			int result = (int) Imgproc.pointPolygonTest(detectedFloorContour2f, pt, calculateDist);
+			return result;
 		}
-		int result = (int) Imgproc.pointPolygonTest(detectedFloorContour2f, pt, calculateDist);
-		return result;
+		
+		if (calculateDist) {
+			return -99;
+		} else {
+			return -1;
+		}
 	}
 
 	public void addScore(int diff) {
