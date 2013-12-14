@@ -124,7 +124,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 	// / OpenGL
 	public MyGLSurfaceView mGLSurfaceView;
 	public OpenGLRenderer mOpenGLRenderer;
-	public Handler mHandler = new Handler();
+	public final Handler mHandler = new Handler();
 
 	// / For Game Flow Control
 	public boolean shoeColorPicked = false;
@@ -301,7 +301,14 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 		mRealGameInstructionLayout = null;
 		mInGameLayout = null;
 
-		mHandler = null;
+		mHandler.removeCallbacks(mJumpHelperRemoverRunnable);
+		mHandler.removeCallbacks(mJumpHelperRunnable);
+		mHandler.removeCallbacks(mRealGameRemoverRunnable);
+		mHandler.removeCallbacks(mShakeHelperRemoverRunnable);
+		mHandler.removeCallbacks(mStartRealGame);
+		mHandler.removeCallbacks(mTutorial1InstructionUpdator);
+		mHandler.removeCallbacks(mTutorial2InstructionUpdator);
+//		mHandler = null;
 	}
 
 	public void onCameraViewStarted(int width, int height) {
@@ -939,7 +946,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 		}
 	};
 
-	protected Runnable mJumpHelperRemoverRunnable = new Runnable() {
+	protected  Runnable mJumpHelperRemoverRunnable = new Runnable() {
 		@Override
 		public void run() {
 			ModeManager.AccEventModeManager.getAccEventModeManager().setCurrentMode(AccEventModeManager.MODE_DEFAULT);
