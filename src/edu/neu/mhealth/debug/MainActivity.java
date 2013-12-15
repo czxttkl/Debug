@@ -213,7 +213,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 
 		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-		OpenGLBugManager.getOpenGLBugManager().setCameraActivityInstance(this);
+		OpenGLBugManager.getOpenGLBugManager(this);
 	}
 
 	@Override
