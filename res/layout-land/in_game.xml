@@ -47,7 +47,8 @@
             android:paddingRight="20dp"
             android:text=""
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="#FF0000"/>
     </RelativeLayout>
 
     <ImageView
