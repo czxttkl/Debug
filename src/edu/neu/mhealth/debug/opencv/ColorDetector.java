@@ -198,6 +198,6 @@ public class ColorDetector {
 	}
 	
 	public List<MatOfPoint> getFloorContours() {
-		return Arrays.asList(mFloorContours);
+		return new LinkedList<MatOfPoint>(Arrays.asList(mFloorContours));
 	}
 }
