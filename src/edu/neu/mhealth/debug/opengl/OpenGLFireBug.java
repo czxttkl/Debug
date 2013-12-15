@@ -40,26 +40,26 @@ public class OpenGLFireBug extends OpenGLBug {
 			mOpenGLBugIterator.remove();
 			return;
 		}
-		
+
 		// If the bug is burning to the end, remove it and also add a new bug
 		if (burning) {
 			burningStepCounter++;
 			if (burningStepCounter == OpenGLBug.BURNING_STEP) {
 				mOpenGLBugIterator.remove();
-				if (OpenGLBugManager.getOpenGLBugManager().getBugListSize() < 4) {
-					OpenGLBug mTutorial1Bug = OpenGLBugManager.getOpenGLBugManager().generateFireBug();
-					mOpenGLBugIterator.add(mTutorial1Bug);
-				}
+//				if (OpenGLBugManager.getOpenGLBugManager().getBugListSize() < 4) {
+//					OpenGLBug mTutorial1Bug = OpenGLBugManager.getOpenGLBugManager().generateFireBug();
+//					mOpenGLBugIterator.add(mTutorial1Bug);
+//				}
 				return;
 			}
 		}
-//		Log.d(Global.APP_LOG_TAG, "size:" + OpenGLBugManager.getOpenGLBugManager().getBugListSize() + " tmpXmtmpY:" + tmpX + "," + tmpY);
+
 		// If the bug runs out of the screen, we generate a new one
 		if (OpenGLBugManager.getOpenGLBugManager().isBugOutOfScreen(x, y)) {
-			if (OpenGLBugManager.getOpenGLBugManager().getBugListSize() < 4) {
-				OpenGLFireBug mTutorial1Bug = OpenGLBugManager.getOpenGLBugManager().generateFireBug();
-				mOpenGLBugIterator.add(mTutorial1Bug);
-			}
+//			if (OpenGLBugManager.getOpenGLBugManager().getBugListSize() < 4) {
+//				OpenGLFireBug mTutorial1Bug = OpenGLBugManager.getOpenGLBugManager().generateFireBug();
+//				mOpenGLBugIterator.add(mTutorial1Bug);
+//			}
 		} else {
 			// If the bug is still in the screen AND it is not burning and bouncing
 			if (!burning) {
@@ -72,7 +72,7 @@ public class OpenGLFireBug extends OpenGLBug {
 					if (!bouncing) {
 						int distanceToContour = OpenGLBugManager.getOpenGLBugManager().distToContour(x, y);
 
-						// The bug could get out of the screen
+						// The bug could get out of the screen even it hits edges
 						if (Math.abs(distanceToContour) < OpenGLBug.radius && (y > thresHeight1 || y < thresHeight2 || x > thresWidth1 || x < thresWidth2)) {
 							// Keep the tmpX tmpY
 						} else {
@@ -81,21 +81,33 @@ public class OpenGLFireBug extends OpenGLBug {
 								bouncing = true;
 								bounceStepCounter = 0;
 								int[] destination = OpenGLBugManager.getOpenGLBugManager().findBugNextDest();
-								int[] speed = OpenGLBugManager.calculateSpeedTowardsDest(destination[0], destination[1], x, y);
-								speedX = speed[0];
-								speedY = speed[1];
-								tmpX = x + speedX;
-								tmpY = y + speedY;
+								// if destination is null, that means opencv can't find bug's next destination. Just keep where it is now
+								if (destination == null) {
+									tmpX = tmpX - speedX;
+									tmpY = tmpY - speedY;
+								} else {
+									int[] speed = OpenGLBugManager.calculateSpeedTowardsDest(destination[0], destination[1], x, y);
+									speedX = speed[0];
+									speedY = speed[1];
+									tmpX = x + speedX;
+									tmpY = y + speedY;
+								}
 							}
 
 							// If the bug is in the floor, but it needs to return
 							if (distanceToContour < OpenGLBug.radius && distanceToContour >= 0) {
 								int[] destination = OpenGLBugManager.getOpenGLBugManager().findBugNextDest();
-								int[] speed = OpenGLBugManager.calculateSpeedTowardsDest(destination[0], destination[1], x, y);
-								speedX = speed[0];
-								speedY = speed[1];
-								tmpX = x + speedX;
-								tmpY = y + speedY;
+								// if destination is null, that means opencv can't find bug's next destination. Just keep where it is now
+								if (destination == null) {
+									tmpX = tmpX - speedX;
+									tmpY = tmpY - speedY;
+								} else {
+									int[] speed = OpenGLBugManager.calculateSpeedTowardsDest(destination[0], destination[1], x, y);
+									speedX = speed[0];
+									speedY = speed[1];
+									tmpX = x + speedX;
+									tmpY = y + speedY;
+								}
 							}
 
 							// If the bug is approaching to the edges.
@@ -107,17 +119,14 @@ public class OpenGLFireBug extends OpenGLBug {
 							}
 						} // If the bug couldn;t get out of the screen.
 					}// If it is not burning and bouncing
-				}
+				}// If fire doesn't hit the bug
 			} // if it is not burning
 		}
 
 		if (bouncing) {
 			bounceStepCounter++;
-			// If bounce step counter hits OpenGLBug.BOUNCING_STEP, we
-			// clear the bouncing information.
-			// We wouldn't update its (x,y) info. However we would keep
-			// its (speedX, speedY)info because that matters with head
-			// rotation
+			// If bounce step counter hits OpenGLBug.BOUNCING_STEP, we clear the bouncing information.
+			// We wouldn't update its (x,y) info. However we would keep its (speedX, speedY)info because that matters with head rotation
 			if (bounceStepCounter == OpenGLBug.BOUNCING_STEP) {
 				bouncing = false;
 				bounceStepCounter = 0;

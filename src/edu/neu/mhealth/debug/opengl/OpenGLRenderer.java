@@ -427,9 +427,11 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer {
 		// Load the res handles that will be used in drawing bugs.
 		loadOpenGLBugResHandles(mBugProgramHandle);
 
+		OpenGLBugManager.getOpenGLBugManager().lock.lock();
 		// Draw bugs
 		drawBugs();
-
+		OpenGLBugManager.getOpenGLBugManager().lock.unlock();
+		
 		// Set our per-vertex fire program.
 		GLES20.glUseProgram(mFireProgramHandle);
 

@@ -1,12 +1,15 @@
 package edu.neu.mhealth.debug.opengl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.R.integer;
+import android.os.Handler;
 import android.util.Log;
 import edu.neu.mhealth.debug.MainActivity;
 import edu.neu.mhealth.debug.helper.Global;
@@ -19,8 +22,12 @@ import edu.neu.mhealth.debug.sensor.MotionMetrics;
 public class OpenGLBugManager implements Observer {
 
 	private MainActivity mCameraActivityInstance;
-
-	/** Hold all the bugs that should be counted and calculated in an arraylist */
+	private int mGameMode = 0;
+	private int bugListLimit = 0;
+	public ReentrantLock lock = new ReentrantLock();
+	
+	/** Hold all the bugs that should be counted and calculated in an arraylist 
+	 * To remove or add elements to mBugList, you must use its listiterator*/
 	public List<OpenGLBug> mBugList = new ArrayList<OpenGLBug>();
 
 	public static OpenGLBugManager mOpenGLBugManager;
@@ -32,14 +39,46 @@ public class OpenGLBugManager implements Observer {
 		return mOpenGLBugManager;
 	}
 
-	public static void finish() {
+	/** Called in activity's ondestroy */
+	public void onDestroy() {
+		mHandler.removeCallbacks(generateFireBugRunnable);
+		mCameraActivityInstance = null;
 		mOpenGLBugManager = null;
+	}
+	
+	/** Called in activity's onpause() */
+	public void onPause() {
+		mHandler.removeCallbacks(generateFireBugRunnable);
 	}
 	
 	public void setCameraActivityInstance(MainActivity mCameraActivity) {
 		mCameraActivityInstance = mCameraActivity;
 	}
 
+	public final Handler mHandler = new Handler();
+	public Runnable generateFireBugRunnable = new Runnable() {
+		@Override
+		public void run() {
+			Log.d(Global.APP_LOG_TAG, "czxttkl  size:" + mBugList.size());
+			if (mBugList.size() > bugListLimit) {
+				mHandler.postDelayed(generateFireBugRunnable, 2000);
+				return;
+			}
+			
+			OpenGLFireBug mOpenGLFireBug = generateFireBug();
+			if (mOpenGLFireBug == null) {
+				mHandler.postDelayed(generateFireBugRunnable, 200);
+				return;
+			} 
+			
+			Log.d(Global.APP_LOG_TAG, "czxttkl " + (mOpenGLFireBug == null?"null" : "not null") + "size:" + mBugList.size());
+			lock.lock();
+			getListIterator().add(mOpenGLFireBug);
+			lock.unlock();
+			mHandler.postDelayed(generateFireBugRunnable, 1000);
+		}
+	};
+	
 	public void setMode(int mode) {
 		switch (mode) {
 		case ModeManager.MODE_MAIN_MENU:
@@ -49,32 +88,39 @@ public class OpenGLBugManager implements Observer {
 
 		case ModeManager.MODE_TUTORIAL_1:
 			clearList();
-			mBugList.add(generateFireBug());
+			bugListLimit = 4;
+			mHandler.removeCallbacks(generateFireBugRunnable);
+			mHandler.post(generateFireBugRunnable);
 			break;
 
 		case ModeManager.MODE_BEFORE_TUTORIAL_1:
 			clearList();
+			mHandler.removeCallbacks(generateFireBugRunnable);
 			break;
 
 		case ModeManager.MODE_TUTORIAL_2:
 			clearList();
-			mBugList.add(generateFireBug());
-			mBugList.add(generateFireBug());
+			bugListLimit = 6;
+			mHandler.removeCallbacks(generateFireBugRunnable);
+			mHandler.post(generateFireBugRunnable);
 			break;
 			
 		case ModeManager.MODE_REAL_GAME:
-			mBugList.add(generateFireBug());
-			mBugList.add(generateFireBug());
+			bugListLimit = 8;
+			mHandler.removeCallbacks(generateFireBugRunnable);
+			mHandler.post(generateFireBugRunnable);
 			break;
 			
 		default:
+			bugListLimit = 0;
 			clearList();
+			mHandler.removeCallbacks(generateFireBugRunnable);
 		}
 	}
 
 	/** Generate one main menu bug if necessary */
 	public void generateMainMenuBug() {
-		if (mBugList.size() != 1) {
+		if (mBugList.size() != 1 && mCameraActivityInstance!=null) {
 			mBugList.clear();
 			int randomHeight = Global.rd.nextInt(mCameraActivityInstance.screenOpenGLHeight / 3);
 			OpenGLMainMenuBug menuBug = new OpenGLMainMenuBug(mCameraActivityInstance.screenOpenGLWidth - OpenGLBug.radius, mCameraActivityInstance.screenOpenGLHeight / 4 + randomHeight, -1, 1,
@@ -90,6 +136,8 @@ public class OpenGLBugManager implements Observer {
 	/** Return the bug's next destination (in opengl coordinate) */
 	public int[] findBugNextDest() {
 		double[] resultArray = mCameraActivityInstance.findBugNextDest();
+		if (resultArray == null)
+			return null;
 		int[] destination = new int[2];
 		destination[0] = (int) (OpenGLRenderer.screenOpenGLWidth * resultArray[0]);
 		destination[1] = (int) (OpenGLRenderer.screenOpenGLHeight * resultArray[1]);
@@ -109,6 +157,9 @@ public class OpenGLBugManager implements Observer {
 		int randomHeight = Global.randInt(OpenGLBug.radius, OpenGLRenderer.screenOpenGLHeight / 2);
 
 		int[] destination = findBugNextDest();
+		if (destination == null)
+			return null;
+		
 		int[] speed = calculateSpeedTowardsDest(destination[0], destination[1], randomWidth, randomHeight);
 
 		OpenGLFireBug tutorial1Bug = new OpenGLFireBug(randomWidth, randomHeight, speed[0], speed[1], OpenGLRenderer.SCALE_RATIO, true, destination[0], destination[1], 0);
@@ -282,8 +333,7 @@ public class OpenGLBugManager implements Observer {
 		}
 		OpenGLBug.relativeSpeedX = openGLSpeedX;
 		OpenGLBug.relativeSpeedY = -openGLSpeedY;
-		
-		Log.e(Global.APP_LOG_TAG, "speedX,speedY: " + speedX + "," + speedY + "    openglspeedx,speedY:" + openGLSpeedX + "," + openGLSpeedY);
+//		Log.e(Global.APP_LOG_TAG, "speedX,speedY: " + speedX + "," + speedY + "    openglspeedx,speedY:" + openGLSpeedX + "," + openGLSpeedY);
 	}
 	
 	public int getOpenCvWidth() {
@@ -307,7 +357,8 @@ public class OpenGLBugManager implements Observer {
 		// / if game mode changed
 		if (observable instanceof ModeManager.ModeEventListener) {
 			Integer gameMode = (Integer) data;
-			setMode(gameMode);
+			mGameMode = gameMode;
+			setMode(mGameMode);
 		}
 
 		if (observable instanceof LinearAccEventListener) {

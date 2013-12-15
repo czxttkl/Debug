@@ -269,7 +269,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 			mOpenCvCameraView.disableView();
 			mOpenCvCameraView = null;
 		}
-		OpenGLBugManager.finish();
+		OpenGLBugManager.getOpenGLBugManager().onDestroy();
 		mGLSurfaceView = null;
 		mOpenGLRenderer = null;
 	}
@@ -311,6 +311,8 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 		
 		shoeColorPicked = false;
 		floorColorPicked = false;
+		
+		OpenGLBugManager.getOpenGLBugManager().onPause();
 	}
 
 	public void onCameraViewStarted(int width, int height) {
@@ -608,7 +610,7 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 	 * Restore or create about screen. (including adding text from strings.xml)
 	 */
 	private void restoreOrCreateAboutScreen() {
-		if (Prefs.getFirstTimePlay(getApplicationContext())) {
+//		if (Prefs.getFirstTimePlay(getApplicationContext())) {
 			LayoutInflater layoutInflater = (LayoutInflater) getBaseContext().getSystemService(LAYOUT_INFLATER_SERVICE);
 			mAboutView = layoutInflater.inflate(R.layout.about_screen, null);
 			mFrameLayout.addView(mAboutView);
@@ -617,17 +619,18 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 			mAboutText.setText(Html.fromHtml(getString(R.string.about_text_debug)));
 			mAboutText.setMovementMethod(LinkMovementMethod.getInstance());
 			mAboutText.setLinkTextColor(getResources().getColor(R.color.holo_light_blue));
-
-			Prefs.setFirstTimePlay(getApplicationContext(), false);
-		} else {
-			restoreOrCreateMainMenu();
-		}
+//
+//			Prefs.setFirstTimePlay(getApplicationContext(), false);
+//		} else {
+//			restoreOrCreateMainMenu();
+//		}
 	}
 
 	public double[] findBugNextDest() {
 		int randomWidth;
 		int randomHeight;
 		int result;
+		int tryTimes = 0;
 		do {
 			// We assume that the screenPixelWidth is the same with the opengl
 			// coordinate
@@ -643,8 +646,12 @@ public class MainActivity extends Activity implements OnTouchListener, CvCameraV
 			// +1: outside the contour -1: inside the contour 0:lies on the
 			// edge;
 			result = isPointInFloor(randomWidth, randomHeight);
-		} while (result != 1);
-
+			tryTimes++;
+		} while (result != 1 && tryTimes < 4);
+		
+		if (result!=1)
+			return null;
+		
 		destinationTarget = new org.opencv.core.Point(randomWidth, randomHeight);
 		// Convert coordinates between opencv and opengl
 		double resultDestX = (double) randomWidth / imageOpenCvWidth;
