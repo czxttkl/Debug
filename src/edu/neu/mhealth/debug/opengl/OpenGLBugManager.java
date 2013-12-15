@@ -24,7 +24,7 @@ public class OpenGLBugManager implements Observer {
 	private MainActivity mCameraActivityInstance;
 	private int mGameMode = 0;
 	private int bugListLimit = 0;
-	public ReentrantLock lock = new ReentrantLock();
+	public ReentrantLock lock = new ReentrantLock(true);
 	
 	/** Hold all the bugs that should be counted and calculated in an arraylist 
 	 * To remove or add elements to mBugList, you must use its listiterator*/
