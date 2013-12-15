@@ -39,6 +39,22 @@ public class OpenGLBugManager implements Observer {
 		return mOpenGLBugManager;
 	}
 
+	public static OpenGLBugManager getOpenGLBugManager(MainActivity mCameraActivity) {
+		if (mOpenGLBugManager == null) {
+			mOpenGLBugManager = new OpenGLBugManager(mCameraActivity);
+		}
+		mOpenGLBugManager.checkCameraActivityInstance(mCameraActivity);
+		return mOpenGLBugManager;
+	}
+	
+	private OpenGLBugManager() {
+		mCameraActivityInstance = null;
+	}
+	
+	private OpenGLBugManager(MainActivity mCameraActivity) {
+		mCameraActivityInstance = mCameraActivity;
+	}
+	
 	/** Called in activity's ondestroy */
 	public void onDestroy() {
 		mHandler.removeCallbacks(generateFireBugRunnable);
@@ -51,8 +67,10 @@ public class OpenGLBugManager implements Observer {
 		mHandler.removeCallbacks(generateFireBugRunnable);
 	}
 	
-	public void setCameraActivityInstance(MainActivity mCameraActivity) {
-		mCameraActivityInstance = mCameraActivity;
+	private void checkCameraActivityInstance(MainActivity mCameraActivity) {
+		if (mCameraActivityInstance == null) {
+			mCameraActivityInstance = mCameraActivity;
+		}
 	}
 
 	public final Handler mHandler = new Handler();
@@ -135,6 +153,10 @@ public class OpenGLBugManager implements Observer {
 
 	/** Return the bug's next destination (in opengl coordinate) */
 	public int[] findBugNextDest() {
+		if (mCameraActivityInstance == null) {
+			Log.i("OpenGLBugManager", "let me know");
+			return null;
+		}
 		double[] resultArray = mCameraActivityInstance.findBugNextDest();
 		if (resultArray == null)
 			return null;
