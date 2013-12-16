@@ -4,10 +4,21 @@ Debug is a 3D augmented-reality game which encourages people do exercise in a fu
 
 We have minimized the requirements of playing the game. Things you need to make sure:
 
-1. A good light condition while playing
+* A good light condition while playing
 
-2. Sticky notes/markers of a high contrast color with the floor.
+* Sticky notes/markers of a high contrast color with the floor.
+
 
 We are keen on having your feedback. Feel free to contact:  czxttkl@gmail.com & shangma.1st@gmail.com 
 
 Happy debugging!
+
+Techniques Used
+--------------------------------------
+**Sensors**:`Accelerometer`  `Linear Accelerometer` `Orientation Sensor` 
+
+Accelerometer is used for detecting if users hold phones horizontally. Linear Accelerometer is used for jumping detection. We tried the orientation sensor to acquire walking directions while users are playing the game. However, we abandoned using it in the current version because the Optical Flow algorithm will take replace of it. 
+
+**OpenCV**:
+
+
