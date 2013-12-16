@@ -24,7 +24,10 @@ Accelerometer is used for detecting if users hold phones horizontally. Linear Ac
 
 Optical Flow is implemented to detect directions and speeds that users are walking in so that bugs would move correspondingly. Currently, we use Color Blob to identify players' shoes and floors they are on. It is not the best solution, though. Before that we have also tried Template Matching and Hough Lines for the same goals, which turned out to suffer from the limited performance on mobile devices.
 
+**OpenGL ES 2.0**:`OBJ loading` `Orthogonal Projection`
+For some convenience we employ Orthogonal Projection at this moment. The bug's model comes from a free download obj file. We also need to parse it to convert it into four float arrays representing bugs' color, position, normals and textures.
 
+**Java**:`Singleton` `Observer & Observable` `Reentrant Lock`
 
 Screenshots
 --------------------------------------
