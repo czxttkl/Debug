@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.neu.mhealth.debug"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    package="com.sx.debug"
+    android:versionCode="10"
+    android:versionName="2.0" >
 	
 	<uses-permission android:name="android.permission.CAMERA"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -23,7 +23,7 @@
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen" 
         android:largeHeap="true">
         <activity
-            android:name="edu.neu.mhealth.debug.MainActivity"
+            android:name="com.sx.debug.MainActivity"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

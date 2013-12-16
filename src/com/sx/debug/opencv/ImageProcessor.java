@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.opencv;
+package com.sx.debug.opencv;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;

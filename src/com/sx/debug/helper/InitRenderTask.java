@@ -1,11 +1,12 @@
-package edu.neu.mhealth.debug.helper;
+package com.sx.debug.helper;
 
 import java.io.File;
 import java.io.IOException;
 
-import edu.neu.mhealth.debug.MainActivity;
-import edu.neu.mhealth.debug.MyGLSurfaceView;
-import edu.neu.mhealth.debug.file.FileHelper;
+import com.sx.debug.MainActivity;
+import com.sx.debug.MyGLSurfaceView;
+import com.sx.debug.file.FileHelper;
+
 import android.os.AsyncTask;
 import android.os.Environment;
 

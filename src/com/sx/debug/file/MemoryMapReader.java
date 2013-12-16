@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.file;
+package com.sx.debug.file;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,7 +9,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
 
-import edu.neu.mhealth.debug.helper.Global;
+import com.sx.debug.helper.Global;
+
 
 import android.R.integer;
 import android.os.Environment;

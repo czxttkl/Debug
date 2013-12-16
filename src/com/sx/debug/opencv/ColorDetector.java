@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.opencv;
+package com.sx.debug.opencv;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,7 +13,8 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import edu.neu.mhealth.debug.helper.ModeManager;
+import com.sx.debug.helper.ModeManager;
+
 
 import android.util.Log;
 

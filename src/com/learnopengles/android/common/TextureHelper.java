@@ -1,6 +1,7 @@
 package com.learnopengles.android.common;
 
-import edu.neu.mhealth.debug.R;
+import com.sx.debug.R;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

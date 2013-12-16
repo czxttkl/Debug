@@ -1,8 +1,9 @@
-package edu.neu.mhealth.debug.opengl;
+package com.sx.debug.opengl;
 
 import java.util.ListIterator;
 
-import edu.neu.mhealth.debug.helper.Global;
+import com.sx.debug.helper.Global;
+
 
 public class OpenGLMainMenuBug extends OpenGLBug{
 

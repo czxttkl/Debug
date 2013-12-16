@@ -1,11 +1,12 @@
-package edu.neu.mhealth.debug.helper;
+package com.sx.debug.helper;
 
 import java.util.Observable;
 import java.util.Observer;
 
-import edu.neu.mhealth.debug.sensor.LinearAccEventListener;
-import edu.neu.mhealth.debug.sensor.MotionEventListener;
-import edu.neu.mhealth.debug.sensor.MotionMetrics;
+import com.sx.debug.sensor.LinearAccEventListener;
+import com.sx.debug.sensor.MotionEventListener;
+import com.sx.debug.sensor.MotionMetrics;
+
 
 import android.R.integer;
 import android.content.Context;

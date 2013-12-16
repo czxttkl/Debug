@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.helper;
+package com.sx.debug.helper;
 
 import android.content.Context;
 import android.preference.PreferenceManager;

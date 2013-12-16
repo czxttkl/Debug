@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.helper;
+package com.sx.debug.helper;
 
 import java.util.Observable;
 import java.util.Observer;

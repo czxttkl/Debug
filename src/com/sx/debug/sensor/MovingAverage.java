@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.sensor;
+package com.sx.debug.sensor;
 
 import android.util.Log;
 

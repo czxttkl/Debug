@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.opengl;
+package com.sx.debug.opengl;
 
 import java.util.ListIterator;
 import java.util.Random;

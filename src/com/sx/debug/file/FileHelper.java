@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.file;
+package com.sx.debug.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;

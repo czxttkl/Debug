@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.opencv;
+package com.sx.debug.opencv;
 
 import java.util.List;
 
@@ -14,9 +14,10 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.video.Video;
 
-import edu.neu.mhealth.debug.opengl.OpenGLBugManager;
-import edu.neu.mhealth.debug.sensor.MotionEventListener;
-import edu.neu.mhealth.debug.sensor.MovingAverage;
+import com.sx.debug.opengl.OpenGLBugManager;
+import com.sx.debug.sensor.MotionEventListener;
+import com.sx.debug.sensor.MovingAverage;
+
 
 public class OpticalFLowDetector {
 	private static final int squareMetric = 200;

@@ -1,4 +1,4 @@
-package edu.neu.mhealth.debug.opengl;
+package com.sx.debug.opengl;
 
 public class OpenGLFire {
 	/**

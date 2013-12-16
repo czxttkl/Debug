@@ -3,12 +3,13 @@
  * @author "Shang Ma"
  *
  */
-package edu.neu.mhealth.debug.sensor;
+package com.sx.debug.sensor;
 
 import java.util.Observable;
 
-import edu.neu.mhealth.debug.helper.ModeManager;
-import edu.neu.mhealth.debug.helper.ModeManager.AccEventModeManager;
+import com.sx.debug.helper.ModeManager;
+import com.sx.debug.helper.ModeManager.AccEventModeManager;
+
 
 import android.R.integer;
 import android.content.Context;
