@@ -28,8 +28,10 @@ Optical Flow is implemented to detect directions and speeds that users are walki
 
 Screenshots
 --------------------------------------
-![](https://dl.dropboxusercontent.com/u/5055823/2013-12-16%2015.27.09.png)   
-![](https://dl.dropboxusercontent.com/u/5055823/2013-12-16%2015.34.37.png)
+![](https://dl.dropboxusercontent.com/u/5055823/debug_pic1.PNG)   
+![](https://dl.dropboxusercontent.com/u/5055823/debug_pic2.PNG) 
+
+[![](https://dl.dropboxusercontent.com/u/5055823/debug_pic3.PNG)](https://www.youtube.com/watch?v=gx8iwlgv9A8)
 
 
 
