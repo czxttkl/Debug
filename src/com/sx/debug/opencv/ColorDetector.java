@@ -31,7 +31,9 @@ public class ColorDetector {
 	private Scalar mFloorUpperBound;
 
 	// Color radius for range checking in HSV color space
-	private Scalar mColorRadius;
+	private Scalar mShoeColorRadius;
+	private Scalar mFloorColorLowerRadius;
+	private Scalar mFloorColorHigherRadius;
 //	private Mat mSpectrum;
 	
 	private MatOfPoint[] mFloorContours;
@@ -59,7 +61,10 @@ public class ColorDetector {
 		mFloorUpperBound = new Scalar(0);
 
 		// Color radius for range checking in HSV color space
-		mColorRadius = new Scalar(25, 50, 50, 0);
+		mShoeColorRadius = new Scalar(10, 50, 50, 0);
+		
+		mFloorColorLowerRadius = new Scalar(25,25, 100,0);
+		mFloorColorHigherRadius = new Scalar(25,50,10,0);
 		
 		mFloorContours = new MatOfPoint[1];
 		mShoesContours = new MatOfPoint[2];
@@ -80,38 +85,38 @@ public class ColorDetector {
 	}
 
 	public void setColorRadius(Scalar radius) {
-		mColorRadius = radius;
+		mShoeColorRadius = radius;
 	}
 
 	public void setFloorHsvColor(Scalar floorHsvColor) {
-		double minH = (floorHsvColor.val[0] >= mColorRadius.val[0]) ? floorHsvColor.val[0] - mColorRadius.val[0] : 0;
-		double maxH = (floorHsvColor.val[0] + mColorRadius.val[0] <= 255) ? floorHsvColor.val[0] + mColorRadius.val[0] : 255;
+		double minH = (floorHsvColor.val[0] >= mFloorColorLowerRadius.val[0]) ? floorHsvColor.val[0] - mFloorColorLowerRadius.val[0] : 0;
+		double maxH = (floorHsvColor.val[0] + mFloorColorHigherRadius.val[0] <= 255) ? floorHsvColor.val[0] + mFloorColorHigherRadius.val[0] : 255;
 		
 		mFloorLowerBound.val[0] = minH;
 		mFloorUpperBound.val[0] = maxH;
 
-		mFloorLowerBound.val[1] = floorHsvColor.val[1] - mColorRadius.val[1];
-		mFloorUpperBound.val[1] = floorHsvColor.val[1] + mColorRadius.val[1];
+		mFloorLowerBound.val[1] = floorHsvColor.val[1] - mFloorColorLowerRadius.val[1];
+		mFloorUpperBound.val[1] = floorHsvColor.val[1] + mFloorColorHigherRadius.val[1];
 
-		mFloorLowerBound.val[2] = floorHsvColor.val[2] - mColorRadius.val[2];
-		mFloorUpperBound.val[2] = floorHsvColor.val[2] + mColorRadius.val[2];
+		mFloorLowerBound.val[2] = floorHsvColor.val[2] - mFloorColorLowerRadius.val[2];
+		mFloorUpperBound.val[2] = floorHsvColor.val[2] + mFloorColorHigherRadius.val[2];
 
 		mFloorLowerBound.val[3] = 0;
 		mFloorUpperBound.val[3] = 255;
 	}
 	
 	public void setShoeHsvColor(Scalar shoeHsvColor) {
-		double minH = (shoeHsvColor.val[0] >= mColorRadius.val[0]) ? shoeHsvColor.val[0] - mColorRadius.val[0] : 0;
-		double maxH = (shoeHsvColor.val[0] + mColorRadius.val[0] <= 255) ? shoeHsvColor.val[0] + mColorRadius.val[0] : 255;
+		double minH = (shoeHsvColor.val[0] >= mShoeColorRadius.val[0]) ? shoeHsvColor.val[0] - mShoeColorRadius.val[0] : 0;
+		double maxH = (shoeHsvColor.val[0] + mShoeColorRadius.val[0] <= 255) ? shoeHsvColor.val[0] + mShoeColorRadius.val[0] : 255;
 
 		mShoeLowerBound.val[0] = minH;
 		mShoeUpperBound.val[0] = maxH;
 
-		mShoeLowerBound.val[1] = shoeHsvColor.val[1] - mColorRadius.val[1];
-		mShoeUpperBound.val[1] = shoeHsvColor.val[1] + mColorRadius.val[1];
+		mShoeLowerBound.val[1] = shoeHsvColor.val[1] - mShoeColorRadius.val[1];
+		mShoeUpperBound.val[1] = shoeHsvColor.val[1] + mShoeColorRadius.val[1];
 
-		mShoeLowerBound.val[2] = shoeHsvColor.val[2] - mColorRadius.val[2];
-		mShoeUpperBound.val[2] = shoeHsvColor.val[2] + mColorRadius.val[2];
+		mShoeLowerBound.val[2] = shoeHsvColor.val[2] - mShoeColorRadius.val[2];
+		mShoeUpperBound.val[2] = shoeHsvColor.val[2] + mShoeColorRadius.val[2];
 
 		mShoeLowerBound.val[3] = 0;
 		mShoeUpperBound.val[3] = 255;
@@ -133,7 +138,7 @@ public class ColorDetector {
 		List<MatOfPoint> mShoesContoursList;
 		List<MatOfPoint> mFloorContoursList;
 		Imgproc.pyrDown(rgbaImage, mPyrDownMat);
-		// Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
+		Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
 
 		Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
 
@@ -154,7 +159,7 @@ public class ColorDetector {
 				double area = Imgproc.contourArea(mContour);
 				if (area > maxArea) {
 					maxArea = area;
-					Core.multiply(mContour, new Scalar(2, 2), mContour);
+					Core.multiply(mContour, new Scalar(4, 4), mContour);
 					mFloorContours[0] = mContour;
 				}
 			}
@@ -179,13 +184,13 @@ public class ColorDetector {
 
 				if (area > maxArea) {
 					maxArea = area;
-					Core.multiply(mContour, new Scalar(2, 2), mContour);
+					Core.multiply(mContour, new Scalar(4, 4), mContour);
 					mShoesContours[0] = mContour;
 					continue;
 				}
 				if (area > secondMaxArea) {
 					secondMaxArea = area;
-					Core.multiply(mContour, new Scalar(2, 2), mContour);
+					Core.multiply(mContour, new Scalar(4, 4), mContour);
 					mShoesContours[1] = mContour;
 					continue;
 				}

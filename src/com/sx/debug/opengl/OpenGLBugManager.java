@@ -101,24 +101,32 @@ public class OpenGLBugManager implements Observer {
 	public void setMode(int mode) {
 		switch (mode) {
 		case ModeManager.MODE_MAIN_MENU:
+			lock.lock();
 			clearList();
+			lock.unlock();
 			generateMainMenuBug();
 			break;
 
 		case ModeManager.MODE_TUTORIAL_1:
+			lock.lock();
 			clearList();
+			lock.unlock();
 			bugListLimit = 4;
 			mHandler.removeCallbacks(generateFireBugRunnable);
 			mHandler.post(generateFireBugRunnable);
 			break;
 
 		case ModeManager.MODE_BEFORE_TUTORIAL_1:
+			lock.lock();
 			clearList();
+			lock.unlock();
 			mHandler.removeCallbacks(generateFireBugRunnable);
 			break;
 
 		case ModeManager.MODE_TUTORIAL_2:
+			lock.lock();
 			clearList();
+			lock.unlock();
 			bugListLimit = 6;
 			mHandler.removeCallbacks(generateFireBugRunnable);
 			mHandler.post(generateFireBugRunnable);
@@ -132,7 +140,9 @@ public class OpenGLBugManager implements Observer {
 			
 		default:
 			bugListLimit = 0;
+			lock.lock();
 			clearList();
+			lock.unlock();
 			mHandler.removeCallbacks(generateFireBugRunnable);
 		}
 	}
