@@ -30,6 +30,24 @@ For some convenience we employ Orthogonal Projection at this moment. The bug's m
 
 **Java**:`Singleton` `Observer & Observable` `Reentrant Lock` `File-Memory Map`
 
+Observer & Observable interfaces are implemented to achieve communications between different classes. File-Memory Map is used for loading the bug's 3D model's information from files to memory directly, quickly and neatly. To guarantee modifying Lists concurrently, we use Reentrant Lock.
+
+Future Improvement
+--------------------------------------
+* Music and vibration
+* Different kinds of bugs (e.g. A manicious kind of bugs which always run to players.)
+* Finer display for OpenGL
+* Robuster CV Algorithm
+* Social network sharing
+* Multiplayer mode
+
+Branches
+--------------------------------------
+* try_opencv_object_detect  Use [template match algorithm](http://docs.opencv.org/modules/imgproc/doc/object_detection.html) for object detection
+* try_opencv_object_detect2 Use feature extraction for object detection
+* try_opencv_hough_lines Use hough lines to detect edges in frames
+
+
 Screenshots
 --------------------------------------
 ![](https://dl.dropboxusercontent.com/u/5055823/debug_pic1.PNG)   
